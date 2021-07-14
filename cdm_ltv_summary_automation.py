@@ -63,7 +63,7 @@ default_args = {
     'retry_delay': timedelta(minutes=10),
 }
 
-with DAG(dag_id=DAG_ID, schedule_interval='0 0 1 */3 *',
+with DAG(dag_id=DAG_ID, schedule_interval='0 8 1 */3 *',
          default_args=default_args, catchup=False) as dag:
     slack_notify_done = SlackAPIPostOperator(
         task_id="slack_notify_done",
