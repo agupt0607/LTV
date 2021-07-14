@@ -51,17 +51,6 @@ SRC_SYSTEM_ID = get_conn(DAG_CONFIG_NAME).extra_dejson.get('src_system_id')
 AD_REV_PER_SUBS = get_conn(DAG_CONFIG_NAME).extra_dejson.get('ad_rev_per_subs')
 FORCED_RUN=get_conn(DAG_CONFIG_NAME).extra_dejson.get('forced_run')
 DATASET_NAME=get_conn(DAG_CONFIG_NAME).extra_dejson.get('dataset_name')
-# { "gc_gs_bucket": "src_raw_files_prod/classification",
-# "gc_bq_project": "i-dss-cdm-data-dev",
-# "till_date" : "2020-04-01",
-# "start_date" : "2014-10-01",
-# "locl_tmp_dir": "/var/tmp/",
-# "src_system_id" : [115],
-# "ad_rev_per_subs" : 1.95,
-# "forced_run":False}
-
-# ldate = get_conn(DAG_CONFIG_NAME).extra_dejson.get('ldate')
-# updated_records_days = get_conn(DAG_CONFIG_NAME).extra_dejson.get('updated_records_days')
 
 default_args = {
     'owner': 'Anit Gupta',
@@ -74,16 +63,16 @@ default_args = {
     'retry_delay': timedelta(minutes=10),
 }
 
-with DAG(dag_id=DAG_ID, schedule_interval='0 0/6 * * *',
+with DAG(dag_id=DAG_ID, schedule_interval='0 0 1 */3 *',
          default_args=default_args, catchup=False) as dag:
-    # slack_notify_done = SlackAPIPostOperator(
-    #     task_id="slack_notify_done",
-    #     username='Airflow',
-    #     token=get_slack_token(),
-    #     channel=SLACK_CHANNEL,
-    #     attachments=[{"color": "good", "text": "*<" + BASE_URL
-    #                                            + "/tree?dag_id={{ dag.dag_id }}|Classification Job > for {{ds}} SUCCESS!*"}],
-    #     text='')
+    slack_notify_done = SlackAPIPostOperator(
+        task_id="slack_notify_done",
+        username='Airflow',
+        token=get_slack_token(),
+        channel=SLACK_CHANNEL,
+        attachments=[{"color": "good", "text": "*<" + BASE_URL
+                                               + "/tree?dag_id={{ dag.dag_id }}|LTV SUMMARIZATION PROCESS> for {{ds}} SUCCESS!*"}],
+        text='')
 
     run_ltv_summary_process = PythonOperator(
         task_id='run_ltv_summary_process',
@@ -111,4 +100,4 @@ with DAG(dag_id=DAG_ID, schedule_interval='0 0/6 * * *',
         on_failure_callback=slack_failed_task,
     )
 
-    run_ltv_summary_process
+    run_ltv_summary_process >> slack_notify_done
