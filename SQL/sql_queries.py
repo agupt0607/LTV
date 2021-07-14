@@ -7,11 +7,11 @@ def trial_period_sql():
 Select A1.*,
 activation_dt as start_dt,
 date_trunc( activation_dt, Month) as Signup_month,
-udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan,
+cdm_udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan,
 case when subscription_platform_cd in ('RECURLY','PSP') then 'RECURLY' else subscription_platform_cd end as subscription_platform,
 
 --- clean version of trial period offered
-udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period
+cdm_udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period
      
  from `i-dss-cdm-data-dev.ent_vw.subscription_fct` A1
 where A1.src_system_id=@src_system_id 
@@ -572,10 +572,10 @@ Select A1.*,
 activation_dt as start_dt,
 EXTRACT(Month FROM activation_dt) AS Month_Start,
 date_trunc( activation_dt, Month) as Signup_month,
-udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan,
+cdm_udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan,
 case when subscription_platform_cd in ('RECURLY','PSP') then 'RECURLY' else subscription_platform_cd end as subscription_platform,
 --- clean version of trial period offered
-udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period     
+cdm_udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period     
 from   `i-dss-cdm-data-dev.ent_vw.subscription_fct` A1
 where A1.src_system_id=@src_system_id 
 and subscription_platform_cd not in ('Apple iOS', 'Apple TV')    
@@ -1122,10 +1122,10 @@ Select A1.*,
 activation_dt as start_dt,
 EXTRACT(Month FROM activation_dt) AS Month_Start,
 date_trunc( activation_dt, Month) as Signup_month,
-udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan,
+cdm_udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan,
 case when subscription_platform_cd in ('RECURLY','PSP') then 'RECURLY' else subscription_platform_cd end as subscription_platform,
 --- clean version of trial period offered
-udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period     
+cdm_udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period     
 from   `i-dss-cdm-data-dev.ent_vw.subscription_fct` A1
 where A1.src_system_id=@src_system_id 
 and subscription_platform_cd not in ('Apple iOS', 'Apple TV')    
@@ -1673,12 +1673,12 @@ def billing_partner_without_free_trial():
     Select A1.*,
     activation_dt as start_dt,
     date_trunc( activation_dt, Month) as Signup_month,
-    udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan_cd1,
+    cdm_udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan_cd1,
     
     case when subscription_platform_cd in ('RECURLY','PSP') then 'RECURLY' else subscription_platform_cd end as subscription_platform,
     
     --- clean version of trial period offered
-  udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period
+  cdm_udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period
 
          
     from 
@@ -2253,12 +2253,12 @@ def billing_partner_with_free_trial():
     Select A1.*,
     activation_dt as start_dt,
     date_trunc( activation_dt, Month) as Signup_month,
-    udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan_cd1,
+    cdm_udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan_cd1,
     
     case when subscription_platform_cd in ('RECURLY','PSP') then 'RECURLY' else subscription_platform_cd end as subscription_platform,
     
     --- clean version of trial period offered
-  udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period
+  cdm_udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period
 
          
     from 
@@ -2831,12 +2831,12 @@ def billing_partner_signup_plan_without_free_trial():
 Select A1.*,
 activation_dt as start_dt,
 date_trunc( activation_dt, Month) as Signup_month,
-udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan,
+cdm_udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan,
 
 case when subscription_platform_cd in ('RECURLY','PSP') then 'RECURLY' else subscription_platform_cd end as subscription_platform,
 
 --- clean version of trial period offered
-udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period     
+cdm_udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period     
 
 
  from `i-dss-cdm-data-dev.ent_vw.subscription_fct` A1
@@ -3414,12 +3414,12 @@ def billing_partner_signup_plan_with_free_trial():
 Select A1.*,
 activation_dt as start_dt,
 date_trunc( activation_dt, Month) as Signup_month,
-udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan,
+cdm_udf.LTV_SIGNUP_PLAN_CALC(signup_plan_cd) as signup_plan,
 
 case when subscription_platform_cd in ('RECURLY','PSP') then 'RECURLY' else subscription_platform_cd end as subscription_platform,
 
 --- clean version of trial period offered
-udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period     
+cdm_udf.LTV_TRIAL_PERIOD_CALC(signup_plan_cd, signup_trial_period_desc, sku_cd, trial_start_dt, paid_start_dt) as Trial_Period     
 
 
  from `i-dss-cdm-data-dev.ent_vw.subscription_fct` A1

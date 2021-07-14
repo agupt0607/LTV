@@ -305,11 +305,11 @@ def calc_all_LTV_tp(df_n):
     return final_output.reset_index(drop=True)
 
 
-def check_data_exists_tp(client,src_system_id,till_date):
+def check_data_exists_tp(client,src_system_id,till_date,project_id, dataset_name):
     sql = """
-    select * from `ltvsubscribers.anit_sandbox.pt_ltv_subs_trial_period_by_quarter` 
+    select * from `{0}.{1}.pt_ltv_subs_trial_period_by_quarter` 
     where day_dt= Date(@till_date) and src_system_id=@src_system_id
-    """
+    """.format(project_id, dataset_name)
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter("src_system_id", "NUMERIC", src_system_id),
@@ -324,12 +324,12 @@ def check_data_exists_tp(client,src_system_id,till_date):
         return True
 
 
-def get_data_from_table_tp(client,src_system_id,till_date):
+def get_data_from_table_tp(client,src_system_id,till_date,project_id, dataset_name):
 
     sql = """
-    select * from `ltvsubscribers.anit_sandbox.pt_ltv_subs_trial_period_by_quarter` 
+    select * from `{0}.{1}.pt_ltv_subs_trial_period_by_quarter` 
     where day_dt= @till_date and src_system_id=@src_system_id
-    """
+    """.format(project_id, dataset_name)
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter("src_system_id", "NUMERIC", src_system_id),
@@ -338,3 +338,18 @@ def get_data_from_table_tp(client,src_system_id,till_date):
     )
     df = client.query(sql, job_config=job_config).to_dataframe()
     return df
+
+def update_active_ind(client,src_system_id,till_date,project_id, dataset_name):
+    sql = """
+        update `{0}.{1}.pt_ltv_subs_trial_period_by_quarter`
+        set active_ind=False 
+        where day_dt= Date(@till_date) and src_system_id=@src_system_id
+        """.format(project_id, dataset_name)
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("src_system_id", "NUMERIC", src_system_id),
+            bigquery.ScalarQueryParameter("till_date", "TIMESTAMP", till_date),
+        ]
+    )
+    df = client.query(sql, job_config=job_config).to_dataframe()
+

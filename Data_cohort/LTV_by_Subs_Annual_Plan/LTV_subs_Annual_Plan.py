@@ -36,13 +36,13 @@ def annual_LTV(df):
     output=pd.DataFrame(overall).reset_index(drop=True)
     return output
 
-def check_data_exists(client,src_system_id,till_date):
+def check_data_exists(client,src_system_id,till_date,project_id, dataset_name):
 
     plan_type='Overall'
     sql = """
-    select * from `ltvsubscribers.anit_sandbox.pt_ltv_annual_plan_by_quarter` 
+    select * from `{0}.{1}.pt_ltv_annual_plan_by_quarter` 
     where day_dt= Date(@till_date) and src_system_id=@src_system_id
-    """
+    """.format(project_id, dataset_name)
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter("src_system_id", "NUMERIC", src_system_id),
@@ -56,3 +56,18 @@ def check_data_exists(client,src_system_id,till_date):
         return False
     else:
         return True
+
+def update_active_ind(client,src_system_id,till_date,project_id, dataset_name):
+    sql = """
+        update `{0}.{1}.pt_ltv_annual_plan_by_quarter`
+        set active_ind=False 
+        where day_dt= Date(@till_date) and src_system_id=@src_system_id
+        """.format(project_id, dataset_name)
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("src_system_id", "NUMERIC", src_system_id),
+            bigquery.ScalarQueryParameter("till_date", "TIMESTAMP", till_date),
+        ]
+    )
+    df = client.query(sql, job_config=job_config).to_dataframe()
+

@@ -22,12 +22,12 @@ def add_current_date(temp):
     return temp
 
 def check_if_forced(temp,is_forced):
-    if is_forced==True:
-        temp['active_ind']=False
-        return temp
-    else:
+    if is_forced==1:
         temp['active_ind']=True
-        return temp
+        return True,temp
+    else:
+        temp['active_ind']=False
+        return False,temp
 
 def check_if_data_present(project_id,dataset,table):
     from google.cloud import bigquery
@@ -43,3 +43,12 @@ def check_if_data_present(project_id,dataset,table):
 def add_src_system_id(temp,src_system_id):
     temp['src_system_id'] = src_system_id
     return temp
+
+def get_first_date_of_quarter(till_date):
+    from datetime import datetime, timedelta,date
+    current_date = datetime.strptime(till_date, '%Y-%m-%d')
+    current_quarter = round((current_date.month - 1) / 3 + 1)
+    first_date = date(current_date.year, 3 * current_quarter - 2, 1)
+    last_date = date(current_date.year, 3 * current_quarter + 1, 1) \
+                + timedelta(days=-1)
+    return str(first_date)

@@ -135,29 +135,30 @@ def calc_projected_retenion_month_bpsp(df, bill_part):
     return projected_retenion_month
 
 
-def calc_conf_rev_CF_bpsp(bill_part):
-    config_df = pd.read_csv("/Users/agupt0607/Documents/LTV_automation/config/gross_margin-2021-04-01.csv")
+def calc_conf_rev_CF_bpsp(bill_part,path):
+    config_df = pd.read_csv(path)
     GM = float(
         config_df[config_df['bill_part'].str.contains(bill_part)]['Gross Margin'].reset_index(drop=True)[0][0:2]) / 100
     return round(GM * 9.99, 2)
 
 
-def calc_conf_rev_LC_bpsp(bill_part):
-    config_df = pd.read_csv("/Users/agupt0607/Documents/LTV_automation/config/gross_margin-2021-04-01.csv")
+def calc_conf_rev_LC_bpsp(bill_part,path):
+    config_df = pd.read_csv(path)
     GM = float(
         config_df[config_df['bill_part'].str.contains(bill_part)]['Gross Margin'].reset_index(drop=True)[0][0:2]) / 100
     return round(GM * 5.99, 2)
 
 
-def calc_conf_w_ad_rev_LC_bpsp(bill_part):
+def calc_conf_w_ad_rev_LC_bpsp(bill_part,path):
     avg_ad_rev_per_LC_subs_per_month = 1.95
-    config_df = pd.read_csv("/Users/agupt0607/Documents/LTV_automation/config/gross_margin-2021-04-01.csv")
+    config_df = pd.read_csv(path)
     LC_subs = float(
         config_df[config_df['bill_part'].str.contains(bill_part)]['% of LC subs'].reset_index(drop=True)[0][0:5]) / 100
     return round(LC_subs * avg_ad_rev_per_LC_subs_per_month, 2)
 
 
-def calc_exp_dur_subs_mnths_LTV_w_wo_revenue_CF_bpsp(df, bill_part, given_inp=False):
+def calc_exp_dur_subs_mnths_LTV_w_wo_revenue_CF_bpsp(df, bill_part,path, given_inp=False):
+
     projected_retenion_month = calc_projected_retenion_month_bpsp(df, bill_part)
     duration = 0
     if given_inp == True:
@@ -214,14 +215,14 @@ def calc_exp_dur_subs_mnths_LTV_w_wo_revenue_CF_bpsp(df, bill_part, given_inp=Fa
         exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:48]) / 100, 1))
         exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:60]) / 100, 1))
         LTV_wo_ad_Rev = []
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:3]) / 100) * calc_conf_rev_CF_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:6]) / 100) * calc_conf_rev_CF_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:9]) / 100) * calc_conf_rev_CF_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:12]) / 100) * calc_conf_rev_CF_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:24]) / 100) * calc_conf_rev_CF_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:36]) / 100) * calc_conf_rev_CF_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:48]) / 100) * calc_conf_rev_CF_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:60]) / 100) * calc_conf_rev_CF_bpsp(bill_part), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:3]) / 100) * calc_conf_rev_CF_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:6]) / 100) * calc_conf_rev_CF_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:9]) / 100) * calc_conf_rev_CF_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:12]) / 100) * calc_conf_rev_CF_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:24]) / 100) * calc_conf_rev_CF_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:36]) / 100) * calc_conf_rev_CF_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:48]) / 100) * calc_conf_rev_CF_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:60]) / 100) * calc_conf_rev_CF_bpsp(bill_part,path), 2))
         return exp_dur_subs_mnths, LTV_wo_ad_Rev
 
     else:
@@ -229,7 +230,8 @@ def calc_exp_dur_subs_mnths_LTV_w_wo_revenue_CF_bpsp(df, bill_part, given_inp=Fa
         return calc_exp_dur_subs_mnths_LTV_w_wo_revenue_CF_bpsp(df, bill_part)
 
 
-def calc_exp_dur_subs_mnths_LTV_w_wo_revenue_LC_bpsp(df, bill_part, given_inp=False):
+def calc_exp_dur_subs_mnths_LTV_w_wo_revenue_LC_bpsp(df, bill_part,path, given_inp=False):
+
     projected_retenion_month = calc_projected_retenion_month_bpsp(df, bill_part)
     duration = 0
     if given_inp == True:
@@ -295,14 +297,14 @@ def calc_exp_dur_subs_mnths_LTV_w_wo_revenue_LC_bpsp(df, bill_part, given_inp=Fa
         exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:48]) / 100, 1))
         exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:60]) / 100, 1))
         LTV_wo_ad_Rev = []
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:3]) / 100) * calc_conf_rev_LC_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:6]) / 100) * calc_conf_rev_LC_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:9]) / 100) * calc_conf_rev_LC_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:12]) / 100) * calc_conf_rev_LC_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:24]) / 100) * calc_conf_rev_LC_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:36]) / 100) * calc_conf_rev_LC_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:48]) / 100) * calc_conf_rev_LC_bpsp(bill_part), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:60]) / 100) * calc_conf_rev_LC_bpsp(bill_part), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:3]) / 100) * calc_conf_rev_LC_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:6]) / 100) * calc_conf_rev_LC_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:9]) / 100) * calc_conf_rev_LC_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:12]) / 100) * calc_conf_rev_LC_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:24]) / 100) * calc_conf_rev_LC_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:36]) / 100) * calc_conf_rev_LC_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:48]) / 100) * calc_conf_rev_LC_bpsp(bill_part,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:60]) / 100) * calc_conf_rev_LC_bpsp(bill_part,path), 2))
         LTV_w_ad_Rev = []
         LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[0] + (sum(projected_retenion_month[0:3]) / 100) * 1.95, 2))
         LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[1] + (sum(projected_retenion_month[0:6]) / 100) * 1.95, 2))
@@ -319,18 +321,19 @@ def calc_exp_dur_subs_mnths_LTV_w_wo_revenue_LC_bpsp(df, bill_part, given_inp=Fa
         return calc_exp_dur_subs_mnths_LTV_w_wo_revenue_LC_bpsp(df, bill_part)
 
 
-def final_output_bpsp(df, plan_cd):
+def final_output_bpsp(df, plan_cd,path):
     output = pd.DataFrame()
     bill_part = ['AMAZON', 'GOOGLE', 'RECURLY', 'ROKU', 'OVERALL']
+
     if plan_cd == 'CF':
         for i in range(0, 5):
-            mnths, ltv_wo_ad = calc_exp_dur_subs_mnths_LTV_w_wo_revenue_CF_bpsp(df, bill_part[i])
+            mnths, ltv_wo_ad = calc_exp_dur_subs_mnths_LTV_w_wo_revenue_CF_bpsp(df, bill_part[i],path)
             temp = {"billing_partner": bill_part[i], "plan_type": plan_cd, "year_1_amt": ltv_wo_ad[3],
                     "year_3_amt": ltv_wo_ad[5], "year_5_amt": ltv_wo_ad[7]}
             output = output.append(temp, ignore_index=True)
     if plan_cd == 'LC':
         for i in range(0, 5):
-            mnths, ltv_wo_ad, ltv_w_ad = calc_exp_dur_subs_mnths_LTV_w_wo_revenue_LC_bpsp(df, bill_part[i])
+            mnths, ltv_wo_ad, ltv_w_ad = calc_exp_dur_subs_mnths_LTV_w_wo_revenue_LC_bpsp(df, bill_part[i],path)
             temp = {"billing_partner": bill_part[i], "plan_type": plan_cd, "year_1_amt": ltv_w_ad[3],
                     "year_3_amt": ltv_w_ad[5], "year_5_amt": ltv_w_ad[7]}
             output = output.append(temp, ignore_index=True)
@@ -366,12 +369,12 @@ def add_overall_bpsp(df, plan_cd):
 
     return new_df
 
-def check_data_exists_bpsp(client,src_system_id,till_date):
+def check_data_exists_bpsp(client,src_system_id,till_date,project_id, dataset_name):
     plan_type='LC'
     sql = """
-    select * from `ltvsubscribers.anit_sandbox.pt_ltv_billing_partner_by_quarter` 
+    select * from `{0}.{1}.pt_ltv_billing_partner_by_quarter` 
     where day_dt= Date(@till_date) and plan_type=@plan_type and src_system_id=@src_system_id
-    """
+    """.format(project_id, dataset_name)
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter("src_system_id", "NUMERIC", src_system_id),
@@ -386,9 +389,9 @@ def check_data_exists_bpsp(client,src_system_id,till_date):
     else:
         plan_type = 'CF'
         sql = """
-            select * from `ltvsubscribers.anit_sandbox.pt_ltv_billing_partner_by_quarter` 
+            select * from `{0}.{1}.pt_ltv_billing_partner_by_quarter` 
             where day_dt= Date(@till_date) and plan_type=@plan_type and src_system_id=@src_system_id
-            """
+            """.format(project_id, dataset_name)
         job_config = bigquery.QueryJobConfig(
             query_parameters=[
                 bigquery.ScalarQueryParameter("src_system_id", "NUMERIC", src_system_id),
@@ -402,3 +405,18 @@ def check_data_exists_bpsp(client,src_system_id,till_date):
             return False
         else:
             return True
+
+def update_active_ind(client,src_system_id,till_date,project_id, dataset_name):
+    sql = """
+        update `{0}.{1}.pt_ltv_billing_partner_by_quarter`
+        set active_ind=False 
+        where day_dt= Date(@till_date) and src_system_id=@src_system_id
+        """.format(project_id, dataset_name)
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("src_system_id", "NUMERIC", src_system_id),
+            bigquery.ScalarQueryParameter("till_date", "TIMESTAMP", till_date),
+        ]
+    )
+    df = client.query(sql, job_config=job_config).to_dataframe()
+
