@@ -18,19 +18,22 @@ warnings.filterwarnings("ignore")
 # end_date = cp.end_date
 
 def get_LTV_bySignup_month(client,src_system_id,start_date,till_date,end_date,forced_run):
-    if sm.check_data_exists_sm(client,src_system_id,till_date,project_id, dataset_name) and forced_run==0:
-
-        return print("Data is present in \'pt_ltv_signup_month_by_quarter\', Please check!")
-    else:
+    # if sm.check_data_exists_sm(client,src_system_id,till_date,project_id, dataset_name) and forced_run==0:
+    #
+    #     return print("Data is present in \'pt_ltv_signup_month_by_quarter\', Please check!")
+    if 1:
         data_w_ft  = sm.get_data_with_free_trial_sm(client,src_system_id,till_date, start_date, end_date)
         data_wo_ft = sm.get_data_without_free_trial_sm(client,src_system_id,till_date, start_date, end_date)
         if len(data_w_ft)>0 and len(data_wo_ft)>0:
+            table_name = 'pt_ltv_signup_month_by_quarter'
             df = sm.combine_overall_Starts_sm(data_wo_ft, data_w_ft)
             output=sm.final_output_sm(df)
-            update_table,otpt = ut.check_if_forced(ut.add_src_system_id(ut.add_current_date(ut.add_quarter_date(output, till_date)),src_system_id),forced_run)
-            if update_table:
+            otpt = ut.add_src_system_id(ut.add_current_date(ut.add_quarter_date(output, till_date)),src_system_id)
+            if not ut.check_latest_data(client,src_system_id,till_date,project_id, dataset_name,table_name,otpt):
                 sm.update_active_ind(client,src_system_id,till_date,project_id, dataset_name)
-            table_name = 'pt_ltv_signup_month_by_quarter'
+            else:
+                return print("Data is present in \'pt_ltv_signup_month_by_quarter\', Please check!")
+            otpt=ut.set_active_ind(otpt)
             if_exists_val = ut.check_if_data_present(project_id, dataset_name, table_name)
             detination_table=dataset_name+'.pt_ltv_signup_month_by_quarter'
             otpt.to_gbq(destination_table=detination_table,
@@ -42,22 +45,24 @@ def get_LTV_bySignup_month(client,src_system_id,start_date,till_date,end_date,fo
             return print("Data not extracted from original scripts.")
 
 def get_LTV_by_Billing_Partner(client,src_system_id,path,start_date,till_date,end_date,forced_run):
-    if bp.check_data_exists_bp(client,src_system_id,till_date,project_id, dataset_name) and forced_run==0:
-        print("Data is present in pt_ltv_billing_partner_by_quarter, Please check!")
-        return pd.DataFrame()
-    else:
-        data_w_ft=bp.get_data_with_free_trial_bp(client,src_system_id,till_date, start_date, end_date)
-        data_wo_ft=bp.get_data_without_free_trial_bp(client,src_system_id,till_date, start_date, end_date)
-        df = bp.combine_overall_Starts_bp(data_wo_ft, data_w_ft)
-        new_df = bp.add_overall_bp(df)
-        print("Data has been populated in table \'pt_ltv_billing_partner_by_quarter\' for OVERALL plane code")
-        return bp.final_output_bp(new_df,path)
+
+    # if bp.check_data_exists_bp(client,src_system_id,till_date,project_id, dataset_name) and forced_run==0:
+    #     print("Data is present in pt_ltv_billing_partner_by_quarter, Please check!")
+    #     return pd.DataFrame()
+
+    data_w_ft=bp.get_data_with_free_trial_bp(client,src_system_id,till_date, start_date, end_date)
+    data_wo_ft=bp.get_data_without_free_trial_bp(client,src_system_id,till_date, start_date, end_date)
+    df = bp.combine_overall_Starts_bp(data_wo_ft, data_w_ft)
+    new_df = bp.add_overall_bp(df)
+    print("Data has been populated in table \'pt_ltv_billing_partner_by_quarter\' for OVERALL plane code")
+    return bp.final_output_bp(new_df,path)
 
 def get_LTV_by_Billing_Partner_Signup_Plan(client,src_system_id,start_date,till_date,end_date,forced_run):
-    if bpsp.check_data_exists_bpsp(client,src_system_id,till_date,project_id, dataset_name) and forced_run==0:
-        print("Data is present in \'pt_ltv_billing_partner_by_quarter\', Please check!")
-        return 1
-    else :
+    # if bpsp.check_data_exists_bpsp(client,src_system_id,till_date,project_id, dataset_name) and forced_run==0:
+    #     print("Data is present in \'pt_ltv_billing_partner_by_quarter\', Please check!")
+    #     return 1
+    if 1 :
+        table_name = 'pt_ltv_billing_partner_by_quarter'
         path = "/usr/local/airflow/dags/dags/cdm_ltv_summary_automation/config/gross_margin-2021-04-01.csv"
         data_w_ft=bpsp.get_data_with_free_trial_bpsp(client,src_system_id,till_date, start_date, end_date)
         data_wo_ft=bpsp.get_data_without_free_trial_bpsp(client,src_system_id,till_date, start_date, end_date)
@@ -66,15 +71,17 @@ def get_LTV_by_Billing_Partner_Signup_Plan(client,src_system_id,start_date,till_
         df_CF_init = bpsp.add_overall_bpsp(df_CF, 'CF')
         df_LC_new = bpsp.final_output_bpsp(df_LC_init, 'LC',path)
         df_CF_new = bpsp.final_output_bpsp(df_CF_init, 'CF',path)
-    df_overall = get_LTV_by_Billing_Partner(client,src_system_id,path,start_date,till_date,end_date,forced_run)
+    df_overall = get_LTV_by_Billing_Partner(client,src_system_id,path,start_date,till_date,end_date,1)
     fin_df_init = df_overall.append(df_LC_new)
     fin_df = fin_df_init.append(df_CF_new)
 
     output_w_quarter_date = ut.add_quarter_date(fin_df, till_date)
-    update_table,final_output = ut.check_if_forced(ut.add_src_system_id(ut.add_current_date(output_w_quarter_date),src_system_id),forced_run)
-    if update_table:
+    final_output = ut.add_src_system_id(ut.add_current_date(output_w_quarter_date),src_system_id)
+    if not ut.check_latest_data(client,src_system_id,till_date,project_id, dataset_name,table_name,final_output):
         bpsp.update_active_ind(client,src_system_id,till_date,project_id, dataset_name)
-    table_name = 'pt_ltv_billing_partner_by_quarter'
+    else:
+        return print("Data is present in \'pt_ltv_billing_partner_by_quarter\', Please check!")
+    final_output = ut.set_active_ind(final_output)
     if_exists_val = ut.check_if_data_present(project_id, dataset_name, table_name)
     destination_table=dataset_name+'.pt_ltv_billing_partner_by_quarter'
     final_output.to_gbq(destination_table=destination_table,
@@ -87,20 +94,24 @@ def get_LTV_by_Billing_Partner_Signup_Plan(client,src_system_id,start_date,till_
     return final_output
 
 def get_LTV_by_Trial_Period(client,src_system_id,start_date,till_date,end_date,forced_run):
-    if tp.check_data_exists_tp(client,src_system_id,till_date,project_id, dataset_name)and forced_run==0:
-        print("Data is present in \'pt_ltv_subs_trial_period_by_quarter\', Please check!")
-        return 1
-    else:
+    # if tp.check_data_exists_tp(client,src_system_id,till_date,project_id, dataset_name)and forced_run==0:
+    #     print("Data is present in \'pt_ltv_subs_trial_period_by_quarter\', Please check!")
+    #     return 1
+    if 1:
+        table_name = 'pt_ltv_subs_trial_period_by_quarter'
         df=tp.get_data_tp(client,src_system_id,till_date, start_date, end_date)
         df_setting_row_data = tp.renaming_columns_tp(df)
         df_w_overall = tp.cal_overall_df_tp(df_setting_row_data)
         output = tp.calc_all_LTV_tp(df_w_overall)
 
         output_w_quarter_date=ut.add_quarter_date(output,till_date)
-        update_table,final_output=ut.check_if_forced(ut.add_src_system_id(ut.add_current_date(output_w_quarter_date),src_system_id),forced_run)
-        table_name = 'pt_ltv_subs_trial_period_by_quarter'
-        if update_table:
+        final_output=ut.add_src_system_id(ut.add_current_date(output_w_quarter_date),src_system_id)
+
+        if not ut.check_latest_data(client,src_system_id,till_date,project_id, dataset_name,table_name,final_output):
            tp.update_active_ind(client,src_system_id,till_date,project_id, dataset_name)
+        else:
+            return print("Data is present in \'pt_ltv_subs_trial_period_by_quarter\', Please check!")
+        final_output = ut.set_active_ind(final_output)
         if_exists_val = ut.check_if_data_present(project_id, dataset_name, table_name)
         destn_table=dataset_name+'.pt_ltv_subs_trial_period_by_quarter'
         final_output.to_gbq(destination_table=destn_table,
@@ -111,15 +122,18 @@ def get_LTV_by_Trial_Period(client,src_system_id,start_date,till_date,end_date,f
         return final_output
 
 def get_LTV_by_Annual_Plan(client,src_system_id,start_date,till_date,end_date,forced_run):
-    if ap.check_data_exists(client,src_system_id,till_date,project_id, dataset_name) and forced_run==0:
-        print("Data is present in \'pt_ltv_annual_plan_by_quarter\', Please check!")
-        return 1
-    else:
+    # if ap.check_data_exists(client,src_system_id,till_date,project_id, dataset_name) and forced_run==0:
+    #     print("Data is present in \'pt_ltv_annual_plan_by_quarter\', Please check!")
+    #     return 1
+    if 1:
+        table_name = 'pt_ltv_annual_plan_by_quarter'
         df=ap.get_data(client,src_system_id,till_date)
-        update_table,otpt = ut.check_if_forced(ut.add_src_system_id(ut.add_current_date(ut.add_quarter_date(ap.annual_LTV(df), till_date)),src_system_id),forced_run)
-        if update_table:
+        otpt =ut.add_src_system_id(ut.add_current_date(ut.add_quarter_date(ap.annual_LTV(df), till_date)),src_system_id)
+        if not ut.check_latest_data(client,src_system_id,till_date,project_id, dataset_name,table_name,otpt):
             ap.update_active_ind(client,src_system_id,till_date,project_id, dataset_name)
-        table_name='pt_ltv_annual_plan_by_quarter'
+        else:
+            return print("Data is present in \'pt_ltv_annual_plan_by_quarter\', Please check!")
+        otpt = ut.set_active_ind(otpt)
         if_exists_val=ut.check_if_data_present(project_id,dataset_name,table_name)
         destn_table=dataset_name+'.pt_ltv_annual_plan_by_quarter'
         otpt.to_gbq(destination_table=destn_table,
@@ -207,10 +221,10 @@ def get_LTV_by_Annual_Plan(client,src_system_id,start_date,till_date,end_date,fo
 def run_all(client,start_date,till_date,end_date):
     result=[]
     for i in range(len(src_system_id)):
-        result.append(get_LTV_bySignup_month(client,src_system_id[i],start_date,till_date,end_date,forced_run))
-        result.append(get_LTV_by_Billing_Partner_Signup_Plan(client,src_system_id[i],start_date,till_date,end_date,forced_run))
-        result.append(get_LTV_by_Trial_Period(client,src_system_id[i],start_date,till_date,end_date,forced_run))
-        result.append(get_LTV_by_Annual_Plan(client,src_system_id[i],start_date,till_date,end_date,forced_run))
+        result.append(get_LTV_bySignup_month(client,src_system_id[i],start_date,till_date,end_date,1))
+        result.append(get_LTV_by_Billing_Partner_Signup_Plan(client,src_system_id[i],start_date,till_date,end_date,1))
+        result.append(get_LTV_by_Trial_Period(client,src_system_id[i],start_date,till_date,end_date,1))
+        result.append(get_LTV_by_Annual_Plan(client,src_system_id[i],start_date,till_date,end_date,1))
     return result
 
 def main_ltv(ds, **kwargs):
@@ -219,7 +233,7 @@ def main_ltv(ds, **kwargs):
     project_id = kwargs['params']['GC_BQ_PROJECT']
     ad_rev_per_subs = kwargs['params']['ad_rev_per_subs']
     src_system_id = kwargs['params']['src_system_id']
-    forced_run =kwargs['params']['forced_run']
+   # forced_run =kwargs['params']['forced_run']
     dataset_name =kwargs['params']['dataset_name']
     start_date = kwargs['params']['start_date']
     till_date = kwargs['params']['till_date']
@@ -242,4 +256,12 @@ def main_ltv(ds, **kwargs):
 
 
 
-
+# client = bigquery.Client('i-dss-cdm-data-dev')
+# src_system_id = [115]
+# ad_rev_per_subs = 1.95
+# till_date = '2020-04-01'
+# start_date = '2014-10-01'
+# project_id='i-dss-cdm-data-dev'
+# dataset_name='cdm_pt'
+# end_date = ut.calc_end_date(till_date)
+# run_all(client,start_date,till_date,end_date)
