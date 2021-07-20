@@ -40,7 +40,7 @@ from main import main_ltv
 BASE_URL = configuration.get('webserver', 'BASE_URL')
 logging.basicConfig(level=logging.INFO)
 
-DAG_ID = 'cdm_ltv_summary_process'
+DAG_ID = 'cdm_ltv_summary_process_quarterly'
 DAG_CONFIG_NAME = 'config_' + DAG_ID
 GC_BQ_PROJECT = get_conn(DAG_CONFIG_NAME).extra_dejson.get('gc_bq_project')
 # GC_GS_BUCKET = get_conn(DAG_CONFIG_NAME).extra_dejson.get('gc_gs_bucket')
@@ -51,7 +51,7 @@ SRC_SYSTEM_ID = get_conn(DAG_CONFIG_NAME).extra_dejson.get('src_system_id')
 AD_REV_PER_SUBS = get_conn(DAG_CONFIG_NAME).extra_dejson.get('ad_rev_per_subs')
 FORCED_RUN=get_conn(DAG_CONFIG_NAME).extra_dejson.get('forced_run')
 DATASET_NAME=get_conn(DAG_CONFIG_NAME).extra_dejson.get('dataset_name')
-
+PATH=get_conn(DAG_CONFIG_NAME).extra_dejson.get('path')
 default_args = {
     'owner': 'Anit Gupta',
     'depends_on_past': False,
@@ -71,7 +71,7 @@ with DAG(dag_id=DAG_ID, schedule_interval='0 8 1 */3 *',
         token=get_slack_token(),
         channel=SLACK_CHANNEL,
         attachments=[{"color": "good", "text": "*<" + BASE_URL
-                                               + "/tree?dag_id={{ dag.dag_id }}|LTV SUMMARIZATION PROCESS> for {{ds}} SUCCESS!*"}],
+                                               + "/tree?dag_id={{ dag.dag_id }}|cdm_ltv_summary_process_quarterly> for {{ds}} SUCCESS!*"}],
         text='')
 
     run_ltv_summary_process = PythonOperator(
@@ -85,7 +85,8 @@ with DAG(dag_id=DAG_ID, schedule_interval='0 8 1 */3 *',
             'src_system_id': SRC_SYSTEM_ID,
             'ad_rev_per_subs': AD_REV_PER_SUBS,
             'dataset_name':DATASET_NAME,
-            'forced_run': FORCED_RUN
+            'forced_run': FORCED_RUN,
+            'path': PATH
             #'GC_BQ_STAGING_DS': GC_BQ_STAGING_DS,
             #'GC_GS_BUCKET': GC_GS_BUCKET,
             #'GCP_SERVICE_ACCOUNT_KEY': GCP_SERVICE_ACCOUNT_KEY,

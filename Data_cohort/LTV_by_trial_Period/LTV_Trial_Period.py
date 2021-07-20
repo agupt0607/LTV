@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from SQL import sql_queries as sq
 warnings.filterwarnings("ignore")
+from config import config_param as cp
 
 def get_data_tp(client,src_system_id,till_date='2021-04-01', start_date='2014-10-01', end_date='2021-3-01'):
     sql = sq.trial_period_sql()
@@ -80,20 +81,35 @@ def calc_avg_retain_first_12_month_tp(df):
     ret_pre_month = calc_retained_from_previous_month_tp(df)
     return round(np.average(ret_pre_month[0:12]), 2)
 
-def calc_conf_rev_CF():
-    return 0.71*9.99
+def calc_conf_rev_CF(path,bill_part='Overall'):
+    config_df = pd.read_csv(path)
+    GM = float(
+        config_df[config_df['Billing_Partner'].str.contains(bill_part)]['Gross Margin'].reset_index(drop=True)[0][
+        0:2]) / 100
+    return round(GM * cp.ad_rev_per_subs, 2)
 
-def calc_conf_rev(plan_cd):
+def calc_conf_rev(plan_cd,path,bill_part='Overall'):
+    config_df = pd.read_csv(path)
+    GM = float(
+        config_df[config_df['Billing_Partner'].str.contains(bill_part)]['Gross Margin'].reset_index(drop=True)[0][
+        0:2]) / 100
+    BP = float(
+        config_df[config_df['Billing_Partner'].str.contains(bill_part)]['Blended Price (CY2020 per F4)'].reset_index(
+            drop=True)[0][1:5])
     if plan_cd=='LC':
-        return 0.71*5.99
+        return GM*cp.LC
     elif plan_cd=='OVERALL':
-        return 0.71*7.03
+        return GM*BP
 
-def calc_conf_w_ad_rev(plan_cd):
+def calc_conf_w_ad_rev(plan_cd,path,bill_part='Overall'):
+     config_df = pd.read_csv(path)
+     LC_subs = round(float(
+         config_df[config_df['Billing_Partner'].str.contains(bill_part)]['% of LC subs'].reset_index(drop=True)[0][
+         0:4]) / 100, 3)
      if plan_cd=='LC':
-        return 1.95
+        return cp.ad_rev_per_subs
      elif plan_cd=='OVERALL':
-        return 0.734*1.95
+        return LC_subs*cp.ad_rev_per_subs
 
 def calc_projected_retenion_month_tp(df):
     projected_retenion_month = []
@@ -108,7 +124,7 @@ def calc_projected_retenion_month_tp(df):
             projected_retenion_month.append(wt_avg_ret_rt[i])
     return projected_retenion_month
 
-def calc_exp_dur_subs_mnths_and_LTV_CF_tp(df,given_inp=False):
+def calc_exp_dur_subs_mnths_and_LTV_CF_tp(df,path,given_inp=False):
     projected_retenion_month = calc_projected_retenion_month_tp(df)
     duration = 0
     if given_inp == True:
@@ -117,42 +133,42 @@ def calc_exp_dur_subs_mnths_and_LTV_CF_tp(df,given_inp=False):
 
     if duration == '3M':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:3]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:3]) / 100) * calc_conf_rev_CF(), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:3]) / 100) * calc_conf_rev_CF(path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev
 
     elif duration == '6M':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:6]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:6]) / 100) * calc_conf_rev_CF(), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:6]) / 100) * calc_conf_rev_CF(path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev
 
     elif duration == '9M':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:9]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:9]) / 100) * calc_conf_rev_CF(), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:9]) / 100) * calc_conf_rev_CF(path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev
 
     elif duration == '1Y':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:12]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:12]) / 100) * calc_conf_rev_CF(), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:12]) / 100) * calc_conf_rev_CF(path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev
 
     elif duration == '2Y':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:24]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:24]) / 100) * calc_conf_rev_CF(), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:24]) / 100) * calc_conf_rev_CF(path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev
 
     elif duration == '3Y':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:36]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:36]) / 100) * calc_conf_rev_CF(), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:36]) / 100) * calc_conf_rev_CF(path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev
 
     elif duration == '4Y':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:48]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:48]) / 100) * calc_conf_rev_CF(), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:48]) / 100) * calc_conf_rev_CF(path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev
 
     elif duration == '5Y':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:60]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:60]) / 100) * calc_conf_rev_CF(), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:60]) / 100) * calc_conf_rev_CF(path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev
 
     elif duration == 'ALL' or duration == 0:
@@ -166,21 +182,21 @@ def calc_exp_dur_subs_mnths_and_LTV_CF_tp(df,given_inp=False):
         exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:48]) / 100, 1))
         exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:60]) / 100, 1))
         LTV_wo_ad_Rev = []
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:3]) / 100) * calc_conf_rev_CF(), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:6]) / 100) * calc_conf_rev_CF(), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:9]) / 100) * calc_conf_rev_CF(), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:12]) / 100) * calc_conf_rev_CF(), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:24]) / 100) * calc_conf_rev_CF(), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:36]) / 100) * calc_conf_rev_CF(), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:48]) / 100) * calc_conf_rev_CF(), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:60]) / 100) * calc_conf_rev_CF(), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:3]) / 100) * calc_conf_rev_CF(path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:6]) / 100) * calc_conf_rev_CF(path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:9]) / 100) * calc_conf_rev_CF(path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:12]) / 100) * calc_conf_rev_CF(path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:24]) / 100) * calc_conf_rev_CF(path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:36]) / 100) * calc_conf_rev_CF(path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:48]) / 100) * calc_conf_rev_CF(path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:60]) / 100) * calc_conf_rev_CF(path), 2))
         return exp_dur_subs_mnths, LTV_wo_ad_Rev
 
     else:
         print("Please select appropiate option")
-        return calc_exp_dur_subs_mnths_and_LTV_CF_tp(df)
+        return calc_exp_dur_subs_mnths_and_LTV_CF_tp(df,path)
 
-def calc_exp_dur_subs_mnths_and_LTV_LC_tp(df,plan_cd, given_inp=False):
+def calc_exp_dur_subs_mnths_and_LTV_LC_tp(df,plan_cd,path, given_inp=False):
     projected_retenion_month = calc_projected_retenion_month_tp(df)
     duration = 0
     if given_inp == True:
@@ -189,50 +205,50 @@ def calc_exp_dur_subs_mnths_and_LTV_LC_tp(df,plan_cd, given_inp=False):
 
     if duration == '3M':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:3]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:3]) / 100) * calc_conf_rev(plan_cd), 2)
-        LTV_w_ad_Rev = round(LTV_wo_ad_Rev + (sum(projected_retenion_month[0:3]) / 100) * calc_conf_w_ad_rev(plan_cd), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:3]) / 100) * calc_conf_rev(plan_cd,path), 2)
+        LTV_w_ad_Rev = round(LTV_wo_ad_Rev + (sum(projected_retenion_month[0:3]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev, LTV_w_ad_Rev
 
     elif duration == '6M':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:6]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:6]) / 100) * calc_conf_rev(plan_cd), 2)
-        LTV_w_ad_Rev = round(LTV_wo_ad_Rev + (sum(projected_retenion_month[0:6]) / 100) * calc_conf_w_ad_rev(plan_cd), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:6]) / 100) * calc_conf_rev(plan_cd,path), 2)
+        LTV_w_ad_Rev = round(LTV_wo_ad_Rev + (sum(projected_retenion_month[0:6]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev, LTV_w_ad_Rev
 
     elif duration == '9M':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:9]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:9]) / 100) * calc_conf_rev(plan_cd), 2)
-        LTV_w_ad_Rev = round(LTV_wo_ad_Rev + (sum(projected_retenion_month[0:9]) / 100) * calc_conf_w_ad_rev(plan_cd), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:9]) / 100) * calc_conf_rev(plan_cd,path), 2)
+        LTV_w_ad_Rev = round(LTV_wo_ad_Rev + (sum(projected_retenion_month[0:9]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev, LTV_w_ad_Rev
 
     elif duration == '1Y':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:12]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:12]) / 100) * calc_conf_rev(plan_cd), 2)
-        LTV_w_ad_Rev = round(LTV_wo_ad_Rev[3] + (sum(projected_retenion_month[0:12]) / 100) * calc_conf_w_ad_rev(plan_cd), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:12]) / 100) * calc_conf_rev(plan_cd,path), 2)
+        LTV_w_ad_Rev = round(LTV_wo_ad_Rev[3] + (sum(projected_retenion_month[0:12]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev, LTV_w_ad_Rev
 
     elif duration == '2Y':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:24]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:24]) / 100) * calc_conf_rev(plan_cd), 2)
-        LTV_w_ad_Rev = round(LTV_wo_ad_Rev[4] + (sum(projected_retenion_month[0:24]) / 100) * calc_conf_w_ad_rev(plan_cd), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:24]) / 100) * calc_conf_rev(plan_cd,path), 2)
+        LTV_w_ad_Rev = round(LTV_wo_ad_Rev[4] + (sum(projected_retenion_month[0:24]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev, LTV_w_ad_Rev
 
     elif duration == '3Y':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:36]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:36]) / 100) * calc_conf_rev(plan_cd), 2)
-        LTV_w_ad_Rev = round(LTV_wo_ad_Rev[5] + (sum(projected_retenion_month[0:36]) / 100) * calc_conf_w_ad_rev(plan_cd), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:36]) / 100) * calc_conf_rev(plan_cd,path), 2)
+        LTV_w_ad_Rev = round(LTV_wo_ad_Rev[5] + (sum(projected_retenion_month[0:36]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev, LTV_w_ad_Rev
 
     elif duration == '4Y':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:48]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:48]) / 100) * calc_conf_rev(plan_cd), 2)
-        LTV_w_ad_Rev = round(LTV_wo_ad_Rev[6] + (sum(projected_retenion_month[0:48]) / 100) * calc_conf_w_ad_rev(plan_cd), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:48]) / 100) * calc_conf_rev(plan_cd,path), 2)
+        LTV_w_ad_Rev = round(LTV_wo_ad_Rev[6] + (sum(projected_retenion_month[0:48]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev, LTV_w_ad_Rev
 
     elif duration == '5Y':
         exp_dur_subs_mnths = round(sum(projected_retenion_month[0:60]) / 100, 1)
-        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:60]) / 100) * calc_conf_rev(plan_cd), 2)
-        LTV_w_ad_Rev = round(LTV_wo_ad_Rev[7] + (sum(projected_retenion_month[0:60]) / 100) * calc_conf_w_ad_rev(plan_cd), 2)
+        LTV_wo_ad_Rev = round((sum(projected_retenion_month[0:60]) / 100) * calc_conf_rev(plan_cd,path), 2)
+        LTV_w_ad_Rev = round(LTV_wo_ad_Rev[7] + (sum(projected_retenion_month[0:60]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2)
         return exp_dur_subs_mnths, LTV_wo_ad_Rev, LTV_w_ad_Rev
 
     elif duration == 'ALL' or duration == 0:
@@ -246,35 +262,35 @@ def calc_exp_dur_subs_mnths_and_LTV_LC_tp(df,plan_cd, given_inp=False):
         exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:48]) / 100, 1))
         exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:60]) / 100, 1))
         LTV_wo_ad_Rev = []
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:3]) / 100) * calc_conf_rev(plan_cd), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:6]) / 100) * calc_conf_rev(plan_cd), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:9]) / 100) * calc_conf_rev(plan_cd), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:12]) / 100) * calc_conf_rev(plan_cd), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:24]) / 100) * calc_conf_rev(plan_cd), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:36]) / 100) * calc_conf_rev(plan_cd), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:48]) / 100) * calc_conf_rev(plan_cd), 2))
-        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:60]) / 100) * calc_conf_rev(plan_cd), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:3]) / 100) * calc_conf_rev(plan_cd,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:6]) / 100) * calc_conf_rev(plan_cd,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:9]) / 100) * calc_conf_rev(plan_cd,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:12]) / 100) * calc_conf_rev(plan_cd,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:24]) / 100) * calc_conf_rev(plan_cd,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:36]) / 100) * calc_conf_rev(plan_cd,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:48]) / 100) * calc_conf_rev(plan_cd,path), 2))
+        LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:60]) / 100) * calc_conf_rev(plan_cd,path), 2))
         LTV_w_ad_Rev = []
-        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[0] + (sum(projected_retenion_month[0:3]) / 100) * calc_conf_w_ad_rev(plan_cd), 2))
-        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[1] + (sum(projected_retenion_month[0:6]) / 100) * calc_conf_w_ad_rev(plan_cd), 2))
-        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[2] + (sum(projected_retenion_month[0:9]) / 100) * calc_conf_w_ad_rev(plan_cd), 2))
-        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[3] + (sum(projected_retenion_month[0:12]) / 100) * calc_conf_w_ad_rev(plan_cd), 2))
-        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[4] + (sum(projected_retenion_month[0:24]) / 100) * calc_conf_w_ad_rev(plan_cd), 2))
-        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[5] + (sum(projected_retenion_month[0:36]) / 100) * calc_conf_w_ad_rev(plan_cd), 2))
-        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[6] + (sum(projected_retenion_month[0:48]) / 100) * calc_conf_w_ad_rev(plan_cd), 2))
-        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[7] + (sum(projected_retenion_month[0:60]) / 100) * calc_conf_w_ad_rev(plan_cd), 2))
+        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[0] + (sum(projected_retenion_month[0:3]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2))
+        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[1] + (sum(projected_retenion_month[0:6]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2))
+        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[2] + (sum(projected_retenion_month[0:9]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2))
+        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[3] + (sum(projected_retenion_month[0:12]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2))
+        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[4] + (sum(projected_retenion_month[0:24]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2))
+        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[5] + (sum(projected_retenion_month[0:36]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2))
+        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[6] + (sum(projected_retenion_month[0:48]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2))
+        LTV_w_ad_Rev.append(round(LTV_wo_ad_Rev[7] + (sum(projected_retenion_month[0:60]) / 100) * calc_conf_w_ad_rev(plan_cd,path), 2))
         return exp_dur_subs_mnths, LTV_wo_ad_Rev, LTV_w_ad_Rev
 
-def calc_all_LTV_tp(df_n):
+def calc_all_LTV_tp(df_n,path):
     final_output=pd.DataFrame()
     trial_period=['2-Day Free','3-Day Free','1 Week Free','1 Month Free','3 Month Free','50% off 1 Month','50% off 3 Month','Direct-to-Paid']
     plan_cd=['CF','LC','OVERALL']
-
+   
     for j in range(len(plan_cd)):
         for i in range(len(trial_period)):
             if plan_cd[j]=='CF':
                 this_df=df_n[df_n['signup_plan'].str.contains(plan_cd[j]) & df_n['Trial_Period'].str.startswith(trial_period[i])].reset_index(drop=True)
-                _,ltv_amt=calc_exp_dur_subs_mnths_and_LTV_CF_tp(this_df)
+                _,ltv_amt=calc_exp_dur_subs_mnths_and_LTV_CF_tp(this_df,path)
                 temp_dict={"trial_period" : [trial_period[i]],"plan_type" : [plan_cd[j]], "year_1_amt":[ltv_amt[3]],"year_3_amt":[ltv_amt[5]],"year_5_amt":[ltv_amt[7]]}
                 temp_df=pd.DataFrame.from_dict(temp_dict,orient='columns')
                 final_output=round(pd.concat([final_output,temp_df]))
@@ -285,20 +301,20 @@ def calc_all_LTV_tp(df_n):
                     final_output=round(pd.concat([final_output,temp_df]))
                 else:
                     this_df=df_n[df_n['signup_plan'].str.contains(plan_cd[j]) & df_n['Trial_Period'].str.startswith(trial_period[i])].reset_index(drop=True)
-                    _,__,ltv_amt=calc_exp_dur_subs_mnths_and_LTV_LC_tp(this_df,plan_cd[j])
+                    _,__,ltv_amt=calc_exp_dur_subs_mnths_and_LTV_LC_tp(this_df,plan_cd[j],path)
                     temp_dict={"trial_period" : [trial_period[i]],"plan_type" : [plan_cd[j]], "year_1_amt":[ltv_amt[3]],"year_3_amt":[ltv_amt[5]],"year_5_amt":[ltv_amt[7]]}
                     temp_df=pd.DataFrame.from_dict(temp_dict,orient='columns')
                     final_output=round(pd.concat([final_output,temp_df]))
             elif plan_cd[j]=='OVERALL':
                 if trial_period[i]=='2-Day Free' or trial_period[i]=='3-Day Free':
                     this_df=df_n[df_n['signup_plan'].str.contains('CF') & df_n['Trial_Period'].str.startswith(trial_period[i])].reset_index(drop=True)
-                    _,ltv_amt=calc_exp_dur_subs_mnths_and_LTV_CF_tp(this_df)
+                    _,ltv_amt=calc_exp_dur_subs_mnths_and_LTV_CF_tp(this_df,path)
                     temp_dict={"trial_period" : [trial_period[i]],"plan_type" : [plan_cd[j]], "year_1_amt":[ltv_amt[3]],"year_3_amt":[ltv_amt[5]],"year_5_amt":[ltv_amt[7]]}
                     temp_df=pd.DataFrame.from_dict(temp_dict,orient='columns')
                     final_output=round(pd.concat([final_output,temp_df]))
                 else:
                     this_df=df_n[df_n['signup_plan'].str.contains(plan_cd[j]) & df_n['Trial_Period'].str.startswith(trial_period[i])].reset_index(drop=True)
-                    _,__,ltv_amt=calc_exp_dur_subs_mnths_and_LTV_LC_tp(this_df,plan_cd[j])
+                    _,__,ltv_amt=calc_exp_dur_subs_mnths_and_LTV_LC_tp(this_df,plan_cd[j],path)
                     temp_dict={"trial_period" : [trial_period[i]],"plan_type" : [plan_cd[j]], "year_1_amt":[ltv_amt[3]],"year_3_amt":[ltv_amt[5]],"year_5_amt":[ltv_amt[7]]}
                     temp_df=pd.DataFrame.from_dict(temp_dict,orient='columns')
                     final_output=round(pd.concat([final_output,temp_df]))

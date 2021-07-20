@@ -7,3 +7,5 @@ start_date = '2014-10-01'
 project_id='i-dss-cdm-data-dev'
 dataset_name='cdm_pt'
 end_date = ut.calc_end_date(till_date)
+LC=5.99
+CF=9.99
