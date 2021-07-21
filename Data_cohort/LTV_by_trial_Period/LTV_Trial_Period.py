@@ -86,7 +86,7 @@ def calc_conf_rev_CF(path,bill_part='Overall'):
     GM = float(
         config_df[config_df['Billing_Partner'].str.contains(bill_part)]['Gross Margin'].reset_index(drop=True)[0][
         0:2]) / 100
-    return round(GM * cp.ad_rev_per_subs, 2)
+    return round(GM * cp.CF, 2)
 
 def calc_conf_rev(plan_cd,path,bill_part='Overall'):
     config_df = pd.read_csv(path)
@@ -119,7 +119,7 @@ def calc_projected_retenion_month_tp(df):
         if  wt_avg_ret_rt[i] == 0:
             projected_retenion_month.append(projected_retenion_month[i - 1] * avg_ret_12_mths/100)
         elif i == 0 and wt_avg_ret_rt[i] == 0:  # added an extra check seems broken in excel
-            projected_retenion_month.append(avg_ret_12_mths)
+            projected_retenion_month.append(avg_ret_12_mths/100)
         else:
             projected_retenion_month.append(wt_avg_ret_rt[i])
     return projected_retenion_month
@@ -173,14 +173,14 @@ def calc_exp_dur_subs_mnths_and_LTV_CF_tp(df,path,given_inp=False):
 
     elif duration == 'ALL' or duration == 0:
         exp_dur_subs_mnths = []
-        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:3]) / 100, 1))
-        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:6]) / 100, 1))
-        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:9]) / 100, 1))
-        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:12]) / 100, 1))
-        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:24]) / 100, 1))
-        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:36]) / 100, 1))
-        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:48]) / 100, 1))
-        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:60]) / 100, 1))
+        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:3]) / 100, 2))
+        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:6]) / 100, 2))
+        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:9]) / 100, 2))
+        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:12]) / 100, 2))
+        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:24]) / 100, 2))
+        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:36]) / 100, 2))
+        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:48]) / 100, 2))
+        exp_dur_subs_mnths.append(round(sum(projected_retenion_month[0:60]) / 100, 2))
         LTV_wo_ad_Rev = []
         LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:3]) / 100) * calc_conf_rev_CF(path), 2))
         LTV_wo_ad_Rev.append(round((sum(projected_retenion_month[0:6]) / 100) * calc_conf_rev_CF(path), 2))

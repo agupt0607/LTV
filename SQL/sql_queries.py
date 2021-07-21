@@ -587,7 +587,7 @@ where Trial_Period is not null and Trial_Period  in ('1 Month Free','2 Month Fre
 
 , LTV_stg2 as (
 select ov.Signup_month,
-ov.Month_Start,ov.src_system_id,
+ov.Month_Start,
 case when total_starts is null then 0 else total_starts end as total_starts,
 Subs_Retained_1 ,
 case when ov.Signup_month< (SELECT DATE_ADD(@start_date, INTERVAL 77  MONTH)) then Subs_Retained_2 else 0 end as Subs_Retained_2,
@@ -672,9 +672,9 @@ case when ov.Signup_month< (SELECT DATE_ADD(@start_date, INTERVAL 77  MONTH)) th
 from 
 (
 select * from 
- 
+
  (
- 
+
  Select t.*,running_sum as Cum_cancels ,
  begin_paid_subs as starting_paid_subs
  from 
@@ -682,33 +682,33 @@ select * from
   (
  select Signup_month,
 Month_Start,
- subsequent_month,src_system_id,
+ subsequent_month,
  from
        (
-       select distinct t.Signup_month,Month_Start,src_system_id, from (select r.* from AA_LTV_sub r)  dt 
+       select distinct t.Signup_month,Month_Start from (select r.* from AA_LTV_sub r)  dt 
        cross join
         (select DATE_TRUNC(day_dt,MONTH) as Signup_month from `i-dss-cdm-data-dev.dw_vw.days` where day_dt between  @start_date and @till_date) t -- Change the date range here 
- 
+
       )
       cross join 
       (
       select s.* from 
       (select row_number() over (order by day_dt) subsequent_month from `i-dss-cdm-data-dev.dw_vw.days`) s where subsequent_month <= (SELECT DATE_DIFF(@end_date,@start_date,MONTH)+2)) sb -- change the subsequent months
       ) t
-    
+
       left join (
        select Signup_Month,
-    Month_Start,src_system_id,
+    Month_Start,
             subsequent_month as mn,
             SUM (cancels) OVER (PARTITION BY  Signup_month,Month_Start ORDER BY subsequent_month) AS running_sum
             from (
              select Signup_month,
-             Month_Start,src_system_id,
+             Month_Start,
                 case when (Days_actv/30)<=1 then 1 else CEILING(Days_actv/30) end as subsequent_month,
                 sum(users) as cancels
                 from (
              select Signup_month, 
-             Month_Start,src_system_id,
+             Month_Start,
                 Days_actv,
                 count(distinct subscription_guid ) as users
                 from 
@@ -716,12 +716,12 @@ Month_Start,
                                select t.*, 
                                DATE_DIFF(cast(case when expiration_dt is null OR expiration_dt>=@till_date then @till_date else expiration_dt end as date), cast( start_dt as Date),DAY) +1 as Days_actv
                                       from AA_LTV_sub t
- 
+
                                ) a1 
                                where cast(expiration_dt as date)<=@till_date
-                               group by Signup_month,Month_Start,src_system_id,
+                               group by Signup_month,Month_Start,
                                Days_actv) a2
-            group by Signup_month,Month_Start,src_system_id,
+            group by Signup_month,Month_Start,
             case when (Days_actv/30)<=1 then 1
        else CEILING(Days_actv/30) end
        ) a3 
@@ -731,16 +731,16 @@ Month_Start,
        and t.Month_Start=can.Month_Start)    
         left join ( 
        select Signup_month,   
-       Month_Start,src_system_id,
+       Month_Start,
        count(distinct subscription_guid) as begin_paid_subs
                                from 
                                (
                                select t.*, 
                                DATE_DIFF(cast(case when expiration_dt is null OR expiration_dt>=@till_date then @till_date else expiration_dt end as date), cast( start_dt as Date),DAY) +1 as Days_actv
                                       from AA_LTV_sub t
- 
+
                                ) a1 
-                               group by Signup_month    ,Month_Start,src_system_id                   
+                               group by Signup_month    ,Month_Start                   
                                ) a4
                                on (t.Signup_month=a4.Signup_month
                                and t.Month_Start=a4.Month_Start)
@@ -755,16 +755,16 @@ Month_Start,
      ) ov
 left join ( 
        select Signup_month,   
-       Month_Start,src_system_id,
+       Month_Start,
        count(distinct subscription_guid ) as total_starts
                                from 
                                (
                                select t.*, 
                                DATE_DIFF(cast(case when expiration_dt is null OR expiration_dt>=@till_date then @till_date else expiration_dt end as date), cast( start_dt as Date),DAY) +1 as Days_actv
                                       from AA_LTV_sub t
- 
+
                                ) a1 
-                               group by Signup_month,Month_Start,src_system_id                     
+                               group by Signup_month,Month_Start                
                                ) strt
                                on (ov.Signup_month=strt.Signup_month
                                and ov.Month_Start=strt.Month_Start)
@@ -772,7 +772,7 @@ order by 2,1
 
 )
 , LTV_stg3 as (
-select Signup_month,Month_Start,src_system_id,
+select Signup_month,Month_Start,
 total_starts,
 coalesce((lag(total_starts,1)
     OVER (PARTITION BY Month_Start ORDER BY Signup_month ASC)),0) AS total_starts_l1,
@@ -920,7 +920,7 @@ coalesce((lag(total_starts,2)
     OVER (PARTITION BY Month_Start ORDER BY Signup_month ASC)),0) AS total_starts_l72,
             coalesce((lag(total_starts,73)
     OVER (PARTITION BY Month_Start ORDER BY Signup_month ASC)),0) AS total_starts_l73,
-    
+
                 coalesce((lag(total_starts,74)
     OVER (PARTITION BY Month_Start ORDER BY Signup_month ASC)),0) AS total_starts_l74,
                 coalesce((lag(total_starts,75)
@@ -933,12 +933,12 @@ coalesce((lag(total_starts,2)
     OVER (PARTITION BY Month_Start ORDER BY Signup_month ASC)),0) AS total_starts_l78,
                 coalesce((lag(total_starts,79)
     OVER (PARTITION BY Month_Start ORDER BY Signup_month ASC)),0) AS total_starts_l79
-    
+
      from LTV_stg2
      order by 2,1
 )
 select 
-Month_Start,src_system_id,
+Month_Start,
 sum( Subs_Retained_1) as  Subs_Retained_1,
 sum( Subs_Retained_2) as  Subs_Retained_2,
 sum( Subs_Retained_3) as  Subs_Retained_3,
@@ -1021,11 +1021,11 @@ sum( Subs_Retained_78) as  Subs_Retained_78,
 sum( Subs_Retained_79) as  Subs_Retained_79
 
 from LTV_stg2
-group by 1,2
+group by 1
 UNION ALL
 
 select 
-Month_Start,src_system_id,
+Month_Start,
 sum( total_starts) as  total_starts,
 sum( total_starts_l1) as  total_starts_l1,
 sum( total_starts_l2) as  total_starts_l2,
@@ -1109,7 +1109,7 @@ sum( total_starts_l78) as  total_starts_l78
 
 
 from LTV_stg3
-group by 1,2
+group by 1
 order by 1,2,3
 """
     return query
@@ -1137,7 +1137,7 @@ where Trial_Period is not null and Trial_Period  not in ('1 Month Free','2 Month
 
 , LTV_stg2 as (
 select ov.Signup_month,
-ov.Month_Start,ov.src_system_id,
+ov.Month_Start,
 case when total_starts is null then 0 else total_starts end as total_starts,
 Subs_Retained_1 ,
 case when ov.Signup_month< (SELECT DATE_ADD(@start_date, INTERVAL 77  MONTH)) then Subs_Retained_2 else 0 end as Subs_Retained_2,
@@ -1222,9 +1222,9 @@ case when ov.Signup_month< (SELECT DATE_ADD(@start_date, INTERVAL 77  MONTH)) th
 from 
 (
 select * from 
- 
+
  (
- 
+
  Select t.*,running_sum as Cum_cancels ,
  begin_paid_subs as starting_paid_subs
  from 
@@ -1232,33 +1232,33 @@ select * from
   (
  select Signup_month,
 Month_Start,
- subsequent_month,src_system_id,
+ subsequent_month,
  from
        (
-       select distinct t.Signup_month,Month_Start,src_system_id, from (select r.* from AA_LTV_sub r)  dt 
+       select distinct t.Signup_month,Month_Start, from (select r.* from AA_LTV_sub r)  dt 
        cross join
         (select DATE_TRUNC(day_dt,MONTH) as Signup_month from `i-dss-cdm-data-dev.dw_vw.days` where day_dt between  @start_date and @till_date) t -- Change the date range here 
- 
+
       )
       cross join 
       (
       select s.* from 
       (select row_number() over (order by day_dt) subsequent_month from `i-dss-cdm-data-dev.dw_vw.days`) s where subsequent_month <= (SELECT DATE_DIFF(@end_date,@start_date,MONTH)+2)) sb -- change the subsequent months
       ) t
-    
+
       left join (
        select Signup_Month,
-    Month_Start,src_system_id,
+    Month_Start,
             subsequent_month as mn,
             SUM (cancels) OVER (PARTITION BY  Signup_month,Month_Start ORDER BY subsequent_month) AS running_sum
             from (
              select Signup_month,
-             Month_Start,src_system_id,
+             Month_Start,
                 case when (Days_actv/30)<=1 then 1 else CEILING(Days_actv/30) end as subsequent_month,
                 sum(users) as cancels
                 from (
              select Signup_month, 
-             Month_Start,src_system_id,
+             Month_Start,
                 Days_actv,
                 count(distinct subscription_guid ) as users
                 from 
@@ -1266,12 +1266,12 @@ Month_Start,
                                select t.*, 
                                DATE_DIFF(cast(case when expiration_dt is null OR expiration_dt>=@till_date then @till_date else expiration_dt end as date), cast( start_dt as Date),DAY) +1 as Days_actv
                                       from AA_LTV_sub t
- 
+
                                ) a1 
                                where cast(expiration_dt as date)<=@till_date
-                               group by Signup_month,Month_Start,src_system_id,
+                               group by Signup_month,Month_Start,
                                Days_actv) a2
-            group by Signup_month,Month_Start,src_system_id,
+            group by Signup_month,Month_Start,
             case when (Days_actv/30)<=1 then 1
        else CEILING(Days_actv/30) end
        ) a3 
@@ -1281,16 +1281,16 @@ Month_Start,
        and t.Month_Start=can.Month_Start)    
         left join ( 
        select Signup_month,   
-       Month_Start,src_system_id,
+       Month_Start,
        count(distinct subscription_guid) as begin_paid_subs
                                from 
                                (
                                select t.*, 
                                DATE_DIFF(cast(case when expiration_dt is null OR expiration_dt>=@till_date then @till_date else expiration_dt end as date), cast( start_dt as Date),DAY) +1 as Days_actv
                                       from AA_LTV_sub t
- 
+
                                ) a1 
-                               group by Signup_month    ,Month_Start,src_system_id                   
+                               group by Signup_month    ,Month_Start                 
                                ) a4
                                on (t.Signup_month=a4.Signup_month
                                and t.Month_Start=a4.Month_Start)
@@ -1305,16 +1305,16 @@ Month_Start,
      ) ov
 left join ( 
        select Signup_month,   
-       Month_Start,src_system_id,
+       Month_Start,
        count(distinct subscription_guid ) as total_starts
                                from 
                                (
                                select t.*, 
                                DATE_DIFF(cast(case when expiration_dt is null OR expiration_dt>=@till_date then @till_date else expiration_dt end as date), cast( start_dt as Date),DAY) +1 as Days_actv
                                       from AA_LTV_sub t
- 
+
                                ) a1 
-                               group by Signup_month,Month_Start,src_system_id                     
+                               group by Signup_month,Month_Start                
                                ) strt
                                on (ov.Signup_month=strt.Signup_month
                                and ov.Month_Start=strt.Month_Start)
@@ -1322,7 +1322,7 @@ order by 2,1
 
 )
 , LTV_stg3 as (
-select Signup_month,Month_Start,src_system_id,
+select Signup_month,Month_Start,
 total_starts,
 coalesce((lag(total_starts,1)
     OVER (PARTITION BY Month_Start ORDER BY Signup_month ASC)),0) AS total_starts_l1,
@@ -1470,7 +1470,7 @@ coalesce((lag(total_starts,2)
     OVER (PARTITION BY Month_Start ORDER BY Signup_month ASC)),0) AS total_starts_l72,
             coalesce((lag(total_starts,73)
     OVER (PARTITION BY Month_Start ORDER BY Signup_month ASC)),0) AS total_starts_l73,
-    
+
                 coalesce((lag(total_starts,74)
     OVER (PARTITION BY Month_Start ORDER BY Signup_month ASC)),0) AS total_starts_l74,
                 coalesce((lag(total_starts,75)
@@ -1483,12 +1483,12 @@ coalesce((lag(total_starts,2)
     OVER (PARTITION BY Month_Start ORDER BY Signup_month ASC)),0) AS total_starts_l78,
                 coalesce((lag(total_starts,79)
     OVER (PARTITION BY Month_Start ORDER BY Signup_month ASC)),0) AS total_starts_l79
-    
+
      from LTV_stg2
      order by 2,1
 )
 select 
-Month_Start,src_system_id,
+Month_Start,
 sum( Subs_Retained_1) as  Subs_Retained_1,
 sum( Subs_Retained_2) as  Subs_Retained_2,
 sum( Subs_Retained_3) as  Subs_Retained_3,
@@ -1571,11 +1571,11 @@ sum( Subs_Retained_78) as  Subs_Retained_78,
 sum( Subs_Retained_79) as  Subs_Retained_79
 
 from LTV_stg2
-group by 1,2
+group by 1
 UNION ALL
 
 select 
-Month_Start,src_system_id,
+Month_Start,
 sum( total_starts) as  total_starts,
 sum( total_starts_l1) as  total_starts_l1,
 sum( total_starts_l2) as  total_starts_l2,
@@ -1659,7 +1659,7 @@ sum( total_starts_l78) as  total_starts_l78
 
 
 from LTV_stg3
-group by 1,2
+group by 1
 order by 1,2,3
 """
     return query

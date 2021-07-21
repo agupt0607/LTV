@@ -220,10 +220,10 @@ def get_LTV_by_Annual_Plan(client,src_system_id,start_date,till_date,end_date,fo
 def run_all(client,start_date,till_date,end_date):
     result=[]
     for i in range(len(src_system_id)):
-        result.append(get_LTV_bySignup_month(client,src_system_id[i],path,start_date,till_date,end_date,1))
-        result.append(get_LTV_by_Billing_Partner_Signup_Plan(client,src_system_id[i],path,start_date,till_date,end_date,1))
+        #result.append(get_LTV_bySignup_month(client,src_system_id[i],path,start_date,till_date,end_date,1))
+        #result.append(get_LTV_by_Billing_Partner_Signup_Plan(client,src_system_id[i],path,start_date,till_date,end_date,1))
         result.append(get_LTV_by_Trial_Period(client,src_system_id[i],path,start_date,till_date,end_date,1))
-        result.append(get_LTV_by_Annual_Plan(client,src_system_id[i],start_date,till_date,end_date,1))
+        #result.append(get_LTV_by_Annual_Plan(client,src_system_id[i],start_date,till_date,end_date,1))
     return result
 
 def main_ltv(ds, **kwargs):
@@ -262,12 +262,12 @@ def main_ltv(ds, **kwargs):
 # global project_id,src_system_id,ad_rev_per_subs,forced_run,dataset_name,path
 # src_system_id = [115]
 # ad_rev_per_subs = 1.95
-# till_date = '2020-04-01'
+# till_date = '2021-04-01'
 # start_date = '2014-10-01'
 # project_id='i-dss-cdm-data-dev'
 # dataset_name='cdm_pt'
 # end_date = ut.calc_end_date(till_date)
-# cp.ad_rev_per_subs=5
+# cp.ad_rev_per_subs=1.95
 # path = "/Users/agupt0607/local/dags/dags/cdm_ltv_summary_automation/config/gross_margin-2021-04-01.csv"
 # run_all(client,start_date,till_date,end_date)
 
