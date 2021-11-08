@@ -3,8 +3,7 @@ from datetime import timedelta, datetime, date
 import json
 import logging
 import os, sys
-# import slack
-# from slack import WebClient
+
 
 #airflow
 from airflow import DAG, configuration, macros, models
