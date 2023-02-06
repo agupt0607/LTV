@@ -1,7 +1,0 @@
-from Data_cohort.LTV_by_Billing_Partner.LTV_Billing_partner import get_data_with_free_trial_bp,get_data_without_free_trial_bp
-from Data_cohort.LTV_by_Billing_Partner_Signup_Plan.LTV_Billing_Partner_Signup_plan import get_data_with_free_trial_bpsp,get_data_without_free_trial_bpsp
-# get_data_with_free_trial_bpsp()
-# get_data_without_free_trial_bpsp()
-from Data_cohort.LTV_by_trial_Period.LTV_Trial_Period import get_data_tp
-
-get_data_tp()
